@@ -1,0 +1,55 @@
+"""Example views. Feel free to delete this app."""
+import json
+
+import logging
+from django.http import HttpResponse
+import pandas as pd
+import numpy as np
+from django.shortcuts import render
+
+import commonware
+from django.template.loader import render_to_string
+
+
+log = commonware.log.getLogger('playdoh')
+
+
+def fx_download(request):
+    """Main example view."""
+    data = {}  # You'd add data here that you're sending to the template.
+    return render(request, 'mocotw/fx_download.html', data)
+
+
+def fx_download_sum_data(request):
+    """Main example view."""
+    df_sum = pd.read_hdf('metrics/mocotw.h5', 'fx_download_sum')
+    arr_sum = []
+    for pagePath, pageviews in df_sum[df_sum.pageviews > 200].itertuples():
+        arr_sum += [{'pagePath': pagePath, 'pageviews': str(pageviews)}]
+    return HttpResponse(json.dumps(arr_sum), mimetype='application/json')
+    # return HttpResponse(render_to_string('dashboard/data.json'), mimetype='application/json')
+
+
+def fx_download_stack_data(request):
+    """Main example view."""
+    df_stack = pd.read_hdf('metrics/mocotw.h5', 'fx_download_stack')
+    print df_stack
+    arr_stack = []
+    cols = df_stack.columns.tolist()
+    print cols
+    for index, row in df_stack.iterrows():
+        stack = {}
+        for col in cols:
+            val = row[col]
+            if not isinstance(val, pd.datetime):
+                stack[col] = int(val)
+            else:
+                stack[col] = val.strftime('%Y-%m-%d')
+
+        arr_stack += [stack]
+    return HttpResponse(json.dumps(arr_stack), mimetype='application/json')
+
+
+def data(request):
+    """Main example view."""
+    return HttpResponse(render_to_string('dashboard/data.tsv'), mimetype='application/json')

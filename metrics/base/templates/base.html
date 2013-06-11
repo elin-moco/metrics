@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html LANG="{{ LANG }}" dir="{{ DIR }}">
+  <head>
+    <meta charset="utf-8">
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+    <title>{% block page_title %}統計中心{% endblock %}</title>
+
+    {% block site_css %}{% endblock %}
+    {% block page_css %}{% endblock %}
+  </head>
+  <body>
+    {% block content %}{% endblock %}
+
+    {% block site_js %}
+      {% compress js %}
+      <script src="{{ static('base/js/libs/jquery-1.4.4.min.js') }}"></script>
+      <script src="{{ static('base/js/libs/jquery.cookie.js') }}"></script>
+      <script src="{{ static('base/js/libs/d3.v3.js') }}"></script>
+      {% endcompress %}
+    {% endblock %}
+    {% block page_js %}{% endblock %}
+  </body>
+</html>

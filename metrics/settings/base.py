@@ -16,7 +16,8 @@ INSTALLED_APPS = list(INSTALLED_APPS) + [
     # Application base, containing global templates.
     '%s.base' % PROJECT_MODULE,
     # Example code. Can (and should) be removed for actual projects.
-    '%s.examples' % PROJECT_MODULE,
+    '%s.dashboard' % PROJECT_MODULE,
+    '%s.mocotw' % PROJECT_MODULE,
 ]
 
 # Note! If you intend to add `south` to INSTALLED_APPS,
@@ -44,12 +45,20 @@ AUTHENTICATION_BACKENDS = [
 
 SITE_URL = 'http://127.0.0.1:8000'
 LOGIN_URL = '/'
-LOGIN_REDIRECT_URL = 'examples.home'
-LOGIN_REDIRECT_URL_FAILURE = 'examples.home'
+LOGIN_REDIRECT_URL = 'dashboard.home'
+LOGIN_REDIRECT_URL_FAILURE = 'dashboard.home'
 
 TEMPLATE_CONTEXT_PROCESSORS = list(TEMPLATE_CONTEXT_PROCESSORS) + [
     'django_browserid.context_processors.browserid_form',
 ]
+
+MIDDLEWARE_CLASSES = get_middleware(
+    exclude=(
+        'funfactory.middleware.LocaleURLMiddleware',
+    ),
+    append=(
+        'metrics.base.middleware.DefaultLocaleMiddleware',
+    ))
 
 # Should robots.txt deny everything or disallow a calculated list of URLs we
 # don't want to be crawled?  Default is false, disallow everything.
