@@ -22,7 +22,7 @@ def fx_download(request):
 
 def fx_download_sum_data(request):
     """Main example view."""
-    df_sum = pd.read_hdf('metrics/mocotw.h5', 'fx_download_sum')
+    df_sum = pd.read_hdf('mocotw.h5', 'fx_download_sum')
     arr_sum = []
     for pagePath, pageviews in df_sum[df_sum.pageviews > 200].itertuples():
         arr_sum += [{'pagePath': pagePath, 'pageviews': str(pageviews)}]
@@ -32,7 +32,7 @@ def fx_download_sum_data(request):
 
 def fx_download_stack_data(request):
     """Main example view."""
-    df_stack = pd.read_hdf('metrics/mocotw.h5', 'fx_download_stack')
+    df_stack = pd.read_hdf('mocotw.h5', 'fx_download_stack')
     print df_stack
     arr_stack = []
     cols = df_stack.columns.tolist()

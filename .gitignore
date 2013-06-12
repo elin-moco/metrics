@@ -17,3 +17,7 @@ build
 tmp/*
 *~
 *.mo
+.idea
+analytics.dat
+client_secrets.json
+*.h5

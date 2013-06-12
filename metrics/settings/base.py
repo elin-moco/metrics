@@ -16,6 +16,7 @@ INSTALLED_APPS = list(INSTALLED_APPS) + [
     # Application base, containing global templates.
     '%s.base' % PROJECT_MODULE,
     # Example code. Can (and should) be removed for actual projects.
+    '%s.etl' % PROJECT_MODULE,
     '%s.dashboard' % PROJECT_MODULE,
     '%s.mocotw' % PROJECT_MODULE,
 ]

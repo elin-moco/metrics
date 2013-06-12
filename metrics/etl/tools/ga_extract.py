@@ -1,4 +1,3 @@
-#!/home/elin/.virtualenvs/metrics/bin/python
 # -*- coding: utf-8 -*-
 
 import sys
@@ -8,7 +7,7 @@ import ga_auth
 
 from apiclient.errors import HttpError
 from oauth2client.client import AccessTokenRefreshError
-import texttable
+# import texttable
 import pandas as pd
 import numpy as np
 
@@ -60,7 +59,7 @@ def save_results(results):
         print 'No results found'
 
 
-def main(argv):
+def main(argv = []):
     # Step 1. Get an analytics service object.
     service = ga_auth.initialize_service()
 
@@ -89,4 +88,4 @@ def main(argv):
         print ('The credentials have been revoked or expired, please re-run '
                'the application to re-authorize')
 
-main(sys.argv)
+# main(sys.argv)

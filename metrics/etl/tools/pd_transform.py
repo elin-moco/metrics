@@ -25,26 +25,28 @@ def actual_path(url):
         path = '/'
     return path
 
-df = pd.read_hdf('mocotw.h5', 'fx_download')
-actualPathSeries = df['previousPagePath'].apply(actual_path)
-print actualPathSeries
-df['actualPagePath'] = actualPathSeries
-df.to_hdf('mocotw.h5', 'fx_download')
 
-df_sum = df[['actualPagePath', 'pageviews']].groupby('actualPagePath').sum().sort('pageviews', ascending=False)
+def main(argv = []):
+    df = pd.read_hdf('mocotw.h5', 'fx_download')
+    actualPathSeries = df['previousPagePath'].apply(actual_path)
+    print actualPathSeries
+    df['actualPagePath'] = actualPathSeries
+    df.to_hdf('mocotw.h5', 'fx_download')
 
-print df_sum
+    df_sum = df[['actualPagePath', 'pageviews']].groupby('actualPagePath').sum().sort('pageviews', ascending=False)
 
-df_sum.to_hdf('mocotw.h5', 'fx_download_sum')
+    print df_sum
 
-df_stack = df.groupby(['actualPagePath', 'date']).sum()
-df_stack = df_stack.reset_index()
-df_stack = df_stack[df_stack.actualPagePath.isin(df_sum[:10].index)]
-df_stack = df_stack.pivot(index='date', columns='actualPagePath', values='pageviews')
-df_stack = df_stack.fillna(0)
-df_stack = df_stack.reset_index()
+    df_sum.to_hdf('mocotw.h5', 'fx_download_sum')
 
-print df_stack
+    df_stack = df.groupby(['actualPagePath', 'date']).sum()
+    df_stack = df_stack.reset_index()
+    df_stack = df_stack[df_stack.actualPagePath.isin(df_sum[:10].index)]
+    df_stack = df_stack.pivot(index='date', columns='actualPagePath', values='pageviews')
+    df_stack = df_stack.fillna(0)
+    df_stack = df_stack.reset_index()
 
-df_stack.to_hdf('mocotw.h5', 'fx_download_stack')
+    print df_stack
+
+    df_stack.to_hdf('mocotw.h5', 'fx_download_stack')
 

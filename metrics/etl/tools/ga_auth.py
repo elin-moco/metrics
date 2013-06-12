@@ -1,5 +1,3 @@
-#!/home/elin/.virtualenvs/metrics/bin/python
-
 # import required classes
 import httplib2
 from apiclient.discovery import build
