@@ -1,16 +1,19 @@
 from dircache import listdir
 from datetime import datetime
+import importlib
 import texttable
 
 
 def main(argv = []):
-    config = __import__('log_config_' + argv[1])
+    # config = __import__('metrics.etl.tools', globals(), locals(), ['log_config_' + argv[1]], -1)
+    config = importlib.import_module('metrics.etl.tools.log_config_' + argv[1])
+    print config
     headerParam = config.headerParam
     wallpaperAPrefix = config.wallpaperAPrefix
     wallpaperBPrefix = config.wallpaperBPrefix
     dateRange = config.dateRange
 
-    dir = 'mocotw/web/'
+    dir = argv[0]
     dateFormat = '%Y-%m-%d'
     fromDate = datetime.strptime(dateRange[0], dateFormat)
     toDate = datetime.strptime(dateRange[1], dateFormat)
