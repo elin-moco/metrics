@@ -19,6 +19,7 @@ INSTALLED_APPS = list(INSTALLED_APPS) + [
     '%s.etl' % PROJECT_MODULE,
     '%s.dashboard' % PROJECT_MODULE,
     '%s.mocotw' % PROJECT_MODULE,
+    'gunicorn',
 ]
 
 # Note! If you intend to add `south` to INSTALLED_APPS,
