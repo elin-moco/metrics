@@ -1,12 +1,15 @@
 # This is your project's main settings file that can be committed to your
 # repo. If you need to override a setting locally, use settings_local.py
+import re
 
 from funfactory.settings_base import *
+from jinja2.environment import DEFAULT_FILTERS
 
 # Name of the top-level module where you put all your apps.
 # If you did not install Playdoh with the funfactory installer script
 # you may need to edit this value. See the docs about installing from a
 # clone.
+
 PROJECT_MODULE = 'metrics'
 
 # Defines the views served for root URLs.
@@ -20,6 +23,7 @@ INSTALLED_APPS = list(INSTALLED_APPS) + [
     '%s.dashboard' % PROJECT_MODULE,
     '%s.mocotw' % PROJECT_MODULE,
     'gunicorn',
+    'django.contrib.humanize',
 ]
 
 # Note! If you intend to add `south` to INSTALLED_APPS,
@@ -95,3 +99,13 @@ DOMAIN_METHODS['messages'] = [
 # ]
 
 LOGGING = dict(loggers=dict(playdoh = {'level': logging.DEBUG}))
+
+def intcomma(orig):
+    new = re.sub("^(-?\d+)(\d{3})", '\g<1>,\g<2>', str(orig))
+    if orig == new:
+        return new
+    else:
+        return intcomma(new)
+
+
+DEFAULT_FILTERS['intcomma'] = intcomma

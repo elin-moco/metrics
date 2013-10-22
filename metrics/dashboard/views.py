@@ -14,7 +14,7 @@ log = commonware.log.getLogger('playdoh')
 
 
 def home(request):
+    s = pd.read_hdf('dashboard.h5', 'user_counts')
     """Main example view."""
-    data = {}  # You'd add data here that you're sending to the template.
-    log.debug("I'm alive!")
+    data = {'user_counts': s.to_dict()}  # You'd add data here that you're sending to the template.
     return render(request, 'dashboard/home.html', data)

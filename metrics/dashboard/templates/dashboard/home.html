@@ -1,29 +1,27 @@
 {% extends "base.html" %}
-
 {% block content %}
 <h1>
-  官網 (不重覆訪客：)
+  官網 (不重覆訪客：{{ user_counts.bedrockUniqueUsers|intcomma }})
 </h1>
 <ul>
   <li>
     <h2>
-      <a href="{{ url('mocotw.fx_download') }}">
-        下載  Firefox
-      </a>
+      <a href="{{ url('mocotw.fx_download') }}">Firefox 下載頁統計</a>
+       (不重覆訪客：{{ user_counts.fxDownloadUniqueUsers|intcomma }})
     </h2>
   </li>
 </ul>
 <h1>
-  部落格 (不重覆訪客：)
+  部落格 (不重覆訪客：{{ user_counts.blogUniqueUsers|intcomma }})
 </h1>
 <h1>
-  謀智台客 (不重覆訪客：)
+  謀智台客 (不重覆訪客：{{ user_counts.techUniqueUsers|intcomma }})
 </h1>
 <h1>
-  活力軍 (不重覆訪客：、註冊人數：)
+  活力軍 (不重覆訪客：{{ user_counts.ffclubUniqueUsers|intcomma }}、註冊人數：{{ user_counts.ffclubUserCount|intcomma }}、Facebook 登入人數：{{ user_counts.ffclubFacebookUserCount|intcomma }})
 </h1>
 <h1>
-  電子報 (訂閱人數：、網頁版不重覆訪客：)
+  電子報 (訂閱人數：{{ user_counts.newsletterSubscriptions|intcomma }}、網頁版不重覆訪客：{{ user_counts.newsletterWebUniqueUsers|intcomma }})
 </h1>
 <ul>
   <li>
@@ -35,6 +33,6 @@
   </li>
 </ul>
 <h1>
-  粉絲團 (粉絲人數：)
+  粉絲團 (粉絲人數：{{ user_counts.facebookFans|intcomma }})
 </h1>
 {% endblock %}

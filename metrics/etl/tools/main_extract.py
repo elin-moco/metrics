@@ -5,6 +5,7 @@ import sys
 
 # import the Auth Helper class
 import urllib2
+from datetime import datetime
 import ga_auth
 
 from apiclient.errors import HttpError
@@ -12,56 +13,81 @@ from oauth2client.client import AccessTokenRefreshError
 # import texttable
 import pandas as pd
 import numpy as np
-from metrics.settings import MOCO_API_SECRET
+from metrics.settings import MOCO_API_SECRET, FFCLUB_API_SECRET, BEDROCK_GA_PROFILE, FFCLUB_GA_PROFILE
 
+hostMap = {
+    'mozilla.com.tw': 'bedrockUniqueUsers',
+    'blog.mozilla.com.tw': 'blogUniqueUsers',
+    'tech.mozilla.com.tw': 'techUniqueUsers',
+    'firefox.club.tw': 'ffclubUniqueUsers',
+}
+today = datetime.now().strftime('%Y-%m-%d')
 
-def get_results(service, profile_id):
+def get_results(service):
     result = {}
     fbPageData = json.loads(urllib2.urlopen('https://graph.facebook.com/MozillaTaiwan').read())
-    result['fbFans'] = fbPageData['likes']
-    result['newsletterSubscriotions'] = \
-        urllib2.urlopen('https://mozilla.com.tw/api/newsletter/subscriptions/count?secret=%s' % MOCO_API_SECRET).read()
-    # return service.data().ga().get(
-    #     ids='ga:' + profile_id,
-    #     start_date='2013-01-01',
-    #     end_date='2013-06-10',
-    #     dimensions='ga:date,ga:pagePath,ga:previousPagePath',
-    #     metrics='ga:visitors,ga:pageviews,ga:timeOnPage',
-    #     filters='ga:nextPagePath=~^/firefox/download/.*;ga:hostname=~^(blog\.|tech\.)?mozilla\.com\.tw',
-        # filters='ga:campaign==epaper1303;ga:hostname=~^(blog\.|tech\.)?mozilla\.com\.tw',
-        # sort='-ga:pageviews',
-        # max_results='10000',
-    # ).execute()
+    result['facebookFans'] = int(fbPageData['likes'])
+    result['newsletterSubscriptions'] = \
+        int(urllib2.urlopen('https://mozilla.com.tw/api/newsletter/subscriptions/count?secret=%s' % MOCO_API_SECRET).read())
+    result['ffclubUserCount'] = \
+        int(urllib2.urlopen('http://firefox.club.tw/api/users/registered/count?secret=%s' % FFCLUB_API_SECRET).read())
+    result['ffclubFacebookUserCount'] = \
+        int(urllib2.urlopen('http://firefox.club.tw/api/users/registered/facebook/count?secret=%s' % FFCLUB_API_SECRET).read())
+    rows = service.data().ga().get(
+        ids='ga:' + BEDROCK_GA_PROFILE,
+        start_date='2012-08-01',
+        end_date=today,
+        dimensions='ga:hostname',
+        metrics='ga:visitors',
+        sort='-ga:visitors',
+        max_results='10',
+    ).execute().get('rows')
+    for row in rows:
+        if row[0] in hostMap.keys():
+            result[hostMap[row[0].encode('ascii', 'ignore')]] = int(row[1])
+    rows = service.data().ga().get(
+        ids='ga:' + BEDROCK_GA_PROFILE,
+        start_date='2012-08-01',
+        end_date=today,
+        # dimensions='ga:hostname',
+        filters='ga:pagePath=~^/newsletter.*',
+        metrics='ga:visitors',
+        sort='-ga:visitors',
+        max_results='10',
+    ).execute().get('rows')
+    for row in rows:
+        result['newsletterWebUniqueUsers'] = int(row[0])
+    rows = service.data().ga().get(
+        ids='ga:' + BEDROCK_GA_PROFILE,
+        start_date='2012-08-01',
+        end_date=today,
+        # dimensions='ga:hostname',
+        filters='ga:pagePath=~^/firefox/download.*',
+        metrics='ga:visitors',
+        sort='-ga:visitors',
+        max_results='10',
+    ).execute().get('rows')
+    for row in rows:
+        result['fxDownloadUniqueUsers'] = int(row[0])
+    rows = service.data().ga().get(
+        ids='ga:' + FFCLUB_GA_PROFILE,
+        start_date='2013-04-01',
+        end_date=today,
+        dimensions='ga:hostname',
+        metrics='ga:visitors',
+        sort='-ga:visitors',
+        max_results='10',
+    ).execute().get('rows')
+    for row in rows:
+        if row[0] in hostMap.keys():
+            result[hostMap[row[0].encode('ascii', 'ignore')]] = int(row[1])
     return result
 
 def save_results(results):
     # Print data nicely for the user.
     if results:
-        print 'Profile: %s' % results.get('profileInfo').get('profileName')
-        rows = results.get('rows')
-        # print '%d rows fetched' % len(rows)
-        newRows = []
-        for row in rows:
-            newRow = []
-            for col in row:
-                newRow.append(col.encode('utf8'))
-            newRows.append(newRow)
-        dataArray = np.array(newRows)
-        print 'array shape: %d, %d' % dataArray.shape
-        df = pd.DataFrame({
-            'date': pd.Series(dataArray[:, 0]).convert_objects(convert_dates='coerce'),
-            'pagePath': pd.Series(dataArray[:, 1]),
-            'previousPagePath': pd.Series(dataArray[:, 2]),
-            'visitors': pd.Series(dataArray[:, 3], dtype='int'),
-            'pageviews': pd.Series(dataArray[:, 4], dtype='int'),
-            'timeOnPage': pd.Series(dataArray[:, 5], dtype='float')
-        })
-        df.to_hdf('mocotw.h5', 'fx_download')
-        # table = texttable.Texttable()
-        # table.add_rows(newRows)
-        # print table.draw()
-        #print 'Total Visits: %s' % results.get('rows')[0][0]
-
+        s = pd.Series(results.values(), results.keys())
+        s.to_hdf('dashboard.h5', 'user_counts')
     else:
         print 'No results found'
 
@@ -71,15 +97,11 @@ def main(argv = []):
     service = ga_auth.initialize_service()
 
     try:
-        # Step 2. Get the user's first profile ID.
-        profile_id = '55777084'
-
-        if profile_id:
-            # Step 3. Query the Core Reporting API.
-            results = get_results(service, profile_id)
-            print results
-            # Step 4. Output the results.
-            # save_results(results)
+        # Step 3. Query the Core Reporting API.
+        results = get_results(service)
+        print results
+        # Step 4. Output the results.
+        save_results(results)
 
     except TypeError, error:
         # Handle errors in constructing a query.
