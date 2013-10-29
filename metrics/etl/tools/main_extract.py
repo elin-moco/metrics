@@ -33,6 +33,17 @@ def get_results(service):
         int(urllib2.urlopen('http://firefox.club.tw/api/users/registered/count?secret=%s' % FFCLUB_API_SECRET).read())
     result['ffclubFacebookUserCount'] = \
         int(urllib2.urlopen('http://firefox.club.tw/api/users/registered/facebook/count?secret=%s' % FFCLUB_API_SECRET).read())
+
+    url = 'https://clients6.google.com/rpc?key=AIzaSyCKSbrvQasunBoV16zDH9R33D88CeLr9gQ'
+    data = '[{"method":"pos.plusones.get","id":"p","params":{"nolog":true,"id":"https://plus.google.com/114653167240123163859","source":"widget","userId":"@viewer","groupId":"@self"},"jsonrpc":"2.0","key":"p","apiVersion":"v1"}]'
+    headers = {'Content-Type': 'application/json'}
+
+    request = urllib2.Request(url, data, headers)
+    response = urllib2.urlopen(request)
+    gplusPageData = json.loads(response.read())
+    result['gplusFans'] = int(gplusPageData[0]['result']['metadata']['globalCounts']['count'])
+
+
     rows = service.data().ga().get(
         ids='ga:' + BEDROCK_GA_PROFILE,
         start_date='2012-08-01',
@@ -45,6 +56,7 @@ def get_results(service):
     for row in rows:
         if row[0] in hostMap.keys():
             result[hostMap[row[0].encode('ascii', 'ignore')]] = int(row[1])
+
     rows = service.data().ga().get(
         ids='ga:' + BEDROCK_GA_PROFILE,
         start_date='2012-08-01',
@@ -57,6 +69,7 @@ def get_results(service):
     ).execute().get('rows')
     for row in rows:
         result['newsletterWebUniqueUsers'] = int(row[0])
+
     rows = service.data().ga().get(
         ids='ga:' + BEDROCK_GA_PROFILE,
         start_date='2012-08-01',
@@ -69,6 +82,7 @@ def get_results(service):
     ).execute().get('rows')
     for row in rows:
         result['fxDownloadUniqueUsers'] = int(row[0])
+
     rows = service.data().ga().get(
         ids='ga:' + FFCLUB_GA_PROFILE,
         start_date='2013-04-01',
@@ -81,6 +95,7 @@ def get_results(service):
     for row in rows:
         if row[0] in hostMap.keys():
             result[hostMap[row[0].encode('ascii', 'ignore')]] = int(row[1])
+
     return result
 
 def save_results(results):
