@@ -33,10 +33,8 @@ def fx_download_sum_data(request):
 def fx_download_stack_data(request):
     """Main example view."""
     df_stack = pd.read_hdf('mocotw.h5', 'fx_download_stack')
-    print df_stack
     arr_stack = []
     cols = df_stack.columns.tolist()
-    print cols
     for index, row in df_stack.iterrows():
         stack = {}
         for col in cols:
@@ -48,6 +46,12 @@ def fx_download_stack_data(request):
 
         arr_stack += [stack]
     return HttpResponse(json.dumps(arr_stack), mimetype='application/json')
+
+
+def moztech_billboard(request):
+    df_posts = pd.read_hdf('moztech.h5', 'posts')
+    data = {'posts': df_posts.transpose().to_dict()}
+    return render(request, 'mocotw/moztech_billboard.html', data)
 
 
 def data(request):

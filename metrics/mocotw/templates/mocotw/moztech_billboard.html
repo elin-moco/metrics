@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block page_css %}
+<style>
+  img {
+    vertical-align: middle;
+  }
+  td {
+    height: 50px;
+    overflow: hidden;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<table>
+  <thead>
+  <tr>
+    <th>標題</th>
+    <th>作者</th>
+    <th>按讚數</th>
+    <th>留言數</th>
+    <th>瀏覽人數</th>
+    <th>瀏覽量</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for path,post in posts.items() %}
+  <tr>
+    <td>
+      <a href="http://tech.mozilla.com.tw{{ path }}">
+        <img src="{{ post.thumbnail.decode('utf8') }}" width="50" height="50"/>{{ post.title.decode('utf8') }}</a>
+    </td>
+    <td>
+      <a href="mailto:{{ post.authorEmail.decode('utf8') }}">{{ post.authorName.decode('utf8') }}</a>
+    </td>
+    <td>{{ post.fbShares }}</td>
+    <td>{{ post.comments }}</td>
+    <td>{{ post.uniqueUsers }}</td>
+    <td>{{ post.pageviews }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
