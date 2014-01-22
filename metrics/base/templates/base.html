@@ -13,9 +13,10 @@
 
     {% block site_js %}
       {% compress js %}
-      <script src="{{ static('base/js/libs/jquery-1.4.4.min.js') }}"></script>
-      <script src="{{ static('base/js/libs/jquery.cookie.js') }}"></script>
-      <script src="{{ static('base/js/libs/d3.v3.js') }}"></script>
+      <script type="text/javascript" src="{{ static('base/js/libs/jquery-1.4.4.min.js') }}"></script>
+      <script type="text/javascript" src="{{ static('base/js/libs/jquery.cookie.js') }}"></script>
+      <script type="text/javascript" src="{{ static('base/js/libs/jquery.tablesorter.js') }}"></script>
+      <script type="text/javascript" src="{{ static('base/js/libs/d3.v3.js') }}"></script>
       {% endcompress %}
     {% endblock %}
     {% block page_js %}{% endblock %}
