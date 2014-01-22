@@ -36,7 +36,7 @@ def get_results(service):
                 'id': post['id'],
                 'title': post['title'],
                 'thumbnail': post['thumbnail'] if 'thumbnail' in post else '',
-                'authorEmail': post['author']['name'],
+                'authorEmail': post['author']['slug'].replace('mozilla-com', '@mozilla.com'),
                 'authorName': post['author']['nickname'],
                 'comments': len(post['comments']),
                 'date': post['date'].split(' ')[0],
