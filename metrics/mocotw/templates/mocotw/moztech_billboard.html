@@ -19,6 +19,9 @@
   table {
     margin-top: 20px;
   }
+  th.header {
+    cursor: pointer;
+  }
   th.headerSortUp:after {
     content: "▼";
     display: inline-block;
@@ -96,7 +99,7 @@
   <tr>
     <td class="title">
       <a href="http://tech.mozilla.com.tw{{ path }}">
-        <img src="{{ post.thumbnail.decode('utf8') }}"/>{{ post.title.decode('utf8') }}</a>
+        <img src="{{ post.thumbnail.decode('utf8') }}"/>{{ post.title.decode('utf8')|safe }}</a>
     </td>
     <td class="author">
       <a href="mailto:{{ post.authorEmail.decode('utf8') }}">{{ post.authorName.decode('utf8') }}</a>
