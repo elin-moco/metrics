@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% block page_title %}謀智台客文章排行榜{% endblock %}
+
+{% block page_css %}
+<style>
+  img {
+    vertical-align: middle;
+  }
+  td {
+    height: 30px;
+    overflow: hidden;
+  }
+  thead {
+    background: #D7D3C8;
+    position: fixed;
+    top: 0;
+    height: 22px;
+  }
+  table {
+    margin-top: 20px;
+  }
+  th.header {
+    cursor: pointer;
+  }
+  th.headerSortUp:after {
+    content: "▼";
+    display: inline-block;
+    font-size: 9px;
+  }
+  th.headerSortDown:after {
+    content: "▲";
+    display: inline-block;
+    font-size: 9px;
+  }
+  th.title {
+    width: 600px;
+  }
+  th.numbers {
+    width: 80px;
+  }
+  td.title {
+    width: 600px;
+    text-indent: 6px;
+  }
+  td.title a img {
+    width: 30px;
+    height: 30px;
+    margin-right: 6px;
+  }
+  td.numbers {
+    text-align: right;
+    width: 80px;
+  }
+  tbody tr:nth-child(even) td:nth-child(odd), tbody tr:nth-child(odd) td:nth-child(even) {
+    background: #F6F4EC;
+  }
+  tbody tr:hover td {
+    background: #CAE1F4 !important;
+  }
+  a, a:link {
+    color: #0095DD;
+  }
+  a:hover {
+    color: #00539F;
+  }
+</style>
+{% endblock %}
+
+{% block page_js %}
+<script type="text/javascript">
+"use strict";
+
+(function() {
+  $('.tablesorter').tablesorter({sortList: [[1,1]]});
+})();
+</script>
+{% endblock %}
+
+{% block content %}
+<table id="moztech-posts" class="tablesorter">
+  <thead>
+  <tr>
+    <th class="title">標題</th>
+    <th class="numbers">按讚數</th>
+    <th class="numbers">留言數</th>
+    <th class="numbers">瀏覽人數</th>
+    <th class="numbers">瀏覽量</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for path,post in posts.items() %}
+  <tr>
+    <td class="title">
+      <a href="http://tech.mozilla.com.tw{{ path }}">
+        <img src="{{ post.thumbnail.decode('utf8') }}"/>{{ post.title.decode('utf8')|safe }}</a>
+    </td>
+    <td class="numbers">{{ post.fbShares }}</td>
+    <td class="numbers">{{ post.comments }}</td>
+    <td class="numbers">{{ post.uniqueUsers }}</td>
+    <td class="numbers">{{ post.pageviews }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

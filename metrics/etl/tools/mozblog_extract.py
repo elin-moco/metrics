@@ -20,35 +20,33 @@ from metrics.settings import MOCO_API_SECRET, FFCLUB_API_SECRET, BEDROCK_GA_PROF
 
 today = datetime.now().strftime('%Y-%m-%d')
 POST_PATTERN = re.compile('^(/posts/[0-9]+)(.*)')
-MOZTECH_URL = 'http://tech.mozilla.com.tw'
+MOZBLOG_URL = 'http://blog.mozilla.com.tw'
 
 def get_results(service):
     result = {}
     page = 1
-    limit = 20
+    limit = 5
     total = 100
     while ((page - 1) * limit) <= total:
-        moztechData = json.loads(urllib2.urlopen(
-            '%s/api/get_recent_posts/?count=%d&page=%d' % (MOZTECH_URL, limit, page)).read())
-        total = moztechData['count_total']
-        for post in moztechData['posts']:
+        mozblogData = json.loads(urllib2.urlopen(
+            '%s/api/get_recent_posts/?count=%d&page=%d' % (MOZBLOG_URL, limit, page)).read())
+        total = mozblogData['count_total']
+        for post in mozblogData['posts']:
             result['/posts/%d' % post['id']] = {
                 'id': post['id'],
                 'title': post['title'],
                 'thumbnail': post['thumbnail'] if 'thumbnail' in post else '',
-                'authorEmail': post['author']['name'],
-                'authorName': post['author']['nickname'],
                 'comments': len(post['comments']),
                 'fbShares': 0,
                 'uniqueUsers': 0,
                 'pageviews': 0,
             }
         page += 1
-    urls = ','.join([MOZTECH_URL + x for x in result.keys()])
+    urls = ','.join([MOZBLOG_URL + x for x in result.keys()])
     fbShareData = json.loads(urllib2.urlopen('https://graph.facebook.com/?%s' % urlencode({'ids': urls})).read())
 
     for url, fbShare in fbShareData.items():
-        pagePath = url[len(MOZTECH_URL):]
+        pagePath = url[len(MOZBLOG_URL):]
         if 'shares' in fbShare:
           result[pagePath]['fbShares'] = fbShare['shares']
 
@@ -58,9 +56,9 @@ def get_results(service):
         end_date=today,
         dimensions='ga:pagePath',
         metrics='ga:visitors,ga:pageviews',
-        filters='ga:hostname==tech.mozilla.com.tw',
+        filters='ga:hostname==blog.mozilla.com.tw',
         sort='-ga:pageviews',
-        max_results='1000',
+        max_results='1000'
     ).execute().get('rows')
     for row in rows:
         pagePath = row[0].encode('ascii', 'ignore')
@@ -98,15 +96,13 @@ def save_results(results):
             'id': pd.Series(df['id'], dtype='int'),
             'title': pd.Series(df['title']),
             'thumbnail': pd.Series(df['thumbnail']),
-            'authorEmail': pd.Series(df['authorEmail']),
-            'authorName': pd.Series(df['authorName']),
             'comments': pd.Series(df['comments'], dtype='int'),
             'fbShares': pd.Series(df['fbShares'], dtype='int'),
             'pageviews': pd.Series(df['pageviews'], dtype='int'),
             'uniqueUsers': pd.Series(df['uniqueUsers'], dtype='int')
         })
         # print df
-        df.to_hdf('moztech.h5', 'posts')
+        df.to_hdf('mozblog.h5', 'posts')
         # table = texttable.Texttable()
         # table.add_rows(newRows)
         # print table.draw()

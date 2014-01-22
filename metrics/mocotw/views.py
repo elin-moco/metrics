@@ -54,6 +54,12 @@ def moztech_billboard(request):
     return render(request, 'mocotw/moztech_billboard.html', data)
 
 
+def mozblog_billboard(request):
+    df_posts = pd.read_hdf('mozblog.h5', 'posts')
+    data = {'posts': df_posts.transpose().to_dict()}
+    return render(request, 'mocotw/mozblog_billboard.html', data)
+
+
 def data(request):
     """Main example view."""
     return HttpResponse(render_to_string('dashboard/data.tsv'), mimetype='application/json')

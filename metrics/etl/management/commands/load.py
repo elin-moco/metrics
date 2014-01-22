@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from metrics.etl.tools import ga_extract, log_extract, pd_transform, main_extract, moztech_extract
+from metrics.etl.tools import ga_extract, log_extract, pd_transform, main_extract, moztech_extract, mozblog_extract
 from metrics.settings import LOG_PATH
 
 
@@ -18,3 +18,5 @@ class Command(BaseCommand):
             main_extract.main()
         if args[0] == 'moztech':
             moztech_extract.main()
+        if args[0] == 'mozblog':
+            mozblog_extract.main()
