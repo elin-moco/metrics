@@ -37,6 +37,7 @@ def get_results(service):
                 'title': post['title'],
                 'thumbnail': post['thumbnail'] if 'thumbnail' in post else '',
                 'comments': len(post['comments']),
+                'date': post['date'].split(' ')[0],
                 'fbShares': 0,
                 'uniqueUsers': 0,
                 'pageviews': 0,
@@ -95,6 +96,7 @@ def save_results(results):
         df = pd.DataFrame({
             'id': pd.Series(df['id'], dtype='int'),
             'title': pd.Series(df['title']),
+            'date': pd.Series(df['date']).convert_objects(convert_dates='coerce'),
             'thumbnail': pd.Series(df['thumbnail']),
             'comments': pd.Series(df['comments'], dtype='int'),
             'fbShares': pd.Series(df['fbShares'], dtype='int'),

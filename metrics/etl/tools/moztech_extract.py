@@ -39,6 +39,7 @@ def get_results(service):
                 'authorEmail': post['author']['name'],
                 'authorName': post['author']['nickname'],
                 'comments': len(post['comments']),
+                'date': post['date'].split(' ')[0],
                 'fbShares': 0,
                 'uniqueUsers': 0,
                 'pageviews': 0,
@@ -97,6 +98,7 @@ def save_results(results):
         df = pd.DataFrame({
             'id': pd.Series(df['id'], dtype='int'),
             'title': pd.Series(df['title']),
+            'date': pd.Series(df['date']).convert_objects(convert_dates='coerce'),
             'thumbnail': pd.Series(df['thumbnail']),
             'authorEmail': pd.Series(df['authorEmail']),
             'authorName': pd.Series(df['authorName']),

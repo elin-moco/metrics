@@ -38,6 +38,9 @@
   th.numbers {
     width: 80px;
   }
+  th.date {
+    width: 100px;
+  }
   td.title {
     width: 600px;
     text-indent: 6px;
@@ -50,6 +53,10 @@
   td.numbers {
     text-align: right;
     width: 80px;
+  }
+  td.date {
+    text-align: right;
+    width: 100px;
   }
   tbody tr:nth-child(even) td:nth-child(odd), tbody tr:nth-child(odd) td:nth-child(even) {
     background: #F6F4EC;
@@ -71,7 +78,7 @@
 "use strict";
 
 (function() {
-  $('.tablesorter').tablesorter({sortList: [[1,1]]});
+  $('.tablesorter').tablesorter({sortList: [[5,1]]});
 })();
 </script>
 {% endblock %}
@@ -85,6 +92,8 @@
     <th class="numbers">留言數</th>
     <th class="numbers">瀏覽人數</th>
     <th class="numbers">瀏覽量</th>
+    <th class="date">發佈時間</th>
+    <th class="numbers">熱門度</th>
   </tr>
   </thead>
   <tbody>
@@ -98,6 +107,8 @@
     <td class="numbers">{{ post.comments }}</td>
     <td class="numbers">{{ post.uniqueUsers }}</td>
     <td class="numbers">{{ post.pageviews }}</td>
+    <td class="date">{{ post.date.strftime('%Y-%m-%d') }}</td>
+    <td class="numbers">{{ "%.3f"|format((post.fbShares*20+post.comments*10+post.pageviews)/(1+(now - post.date).days)**2) }}</td>
   </tr>
   {% endfor %}
   </tbody>

@@ -9,7 +9,7 @@ from django.shortcuts import render
 
 import commonware
 from django.template.loader import render_to_string
-
+from datetime import datetime
 
 log = commonware.log.getLogger('playdoh')
 
@@ -50,13 +50,13 @@ def fx_download_stack_data(request):
 
 def moztech_billboard(request):
     df_posts = pd.read_hdf('moztech.h5', 'posts')
-    data = {'posts': df_posts.transpose().to_dict()}
+    data = {'posts': df_posts.transpose().to_dict(), 'now': datetime.now()}
     return render(request, 'mocotw/moztech_billboard.html', data)
 
 
 def mozblog_billboard(request):
     df_posts = pd.read_hdf('mozblog.h5', 'posts')
-    data = {'posts': df_posts.transpose().to_dict()}
+    data = {'posts': df_posts.transpose().to_dict(), 'now': datetime.now()}
     return render(request, 'mocotw/mozblog_billboard.html', data)
 
 
