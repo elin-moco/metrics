@@ -98,7 +98,7 @@
   {% for path,post in posts.items() %}
   <tr>
     <td class="title">
-      <a href="http://tech.mozilla.com.tw{{ path }}">
+      <a href="http://tech.mozilla.com.tw{{ path }}" target="_blank">
         <img src="{{ post.thumbnail.decode('utf8') }}"/>{{ post.title.decode('utf8')|safe }}</a>
     </td>
     <td class="author">
