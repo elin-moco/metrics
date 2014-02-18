@@ -24,6 +24,7 @@ MOZBLOG_URL = 'http://blog.mozilla.com.tw'
 
 def get_results(service):
     result = {}
+    canonical = []
     page = 1
     limit = 5
     total = 100
@@ -32,6 +33,7 @@ def get_results(service):
             '%s/api/get_recent_posts/?count=%d&page=%d' % (MOZBLOG_URL, limit, page)).read())
         total = mozblogData['count_total']
         for post in mozblogData['posts']:
+            canonical += (post['url'], )
             result['/posts/%d' % post['id']] = {
                 'id': post['id'],
                 'title': post['title'],
@@ -43,13 +45,14 @@ def get_results(service):
                 'pageviews': 0,
             }
         page += 1
-    urls = ','.join([MOZBLOG_URL + x for x in result.keys()])
+
+    urls = ','.join([x for x in canonical])
     fbShareData = json.loads(urllib2.urlopen('https://graph.facebook.com/?%s' % urlencode({'ids': urls})).read())
 
     for url, fbShare in fbShareData.items():
-        pagePath = url[len(MOZBLOG_URL):]
+        pagePath = url[len(MOZBLOG_URL):url.rfind('/')]
         if 'shares' in fbShare:
-          result[pagePath]['fbShares'] = fbShare['shares']
+            result[pagePath]['fbShares'] = fbShare['shares']
 
     rows = service.data().ga().get(
         ids='ga:' + BEDROCK_GA_PROFILE,

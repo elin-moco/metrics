@@ -24,6 +24,7 @@ MOZTECH_URL = 'http://tech.mozilla.com.tw'
 
 def get_results(service):
     result = {}
+    canonical = []
     page = 1
     limit = 20
     total = 100
@@ -32,6 +33,7 @@ def get_results(service):
             '%s/api/get_recent_posts/?count=%d&page=%d' % (MOZTECH_URL, limit, page)).read())
         total = moztechData['count_total']
         for post in moztechData['posts']:
+            canonical += (post['url'], )
             result['/posts/%d' % post['id']] = {
                 'id': post['id'],
                 'title': post['title'],
@@ -45,13 +47,14 @@ def get_results(service):
                 'pageviews': 0,
             }
         page += 1
-    urls = ','.join([MOZTECH_URL + x for x in result.keys()])
+
+    urls = ','.join([x for x in canonical])
     fbShareData = json.loads(urllib2.urlopen('https://graph.facebook.com/?%s' % urlencode({'ids': urls})).read())
 
     for url, fbShare in fbShareData.items():
-        pagePath = url[len(MOZTECH_URL):]
+        pagePath = url[len(MOZTECH_URL):url.rfind('/')]
         if 'shares' in fbShare:
-          result[pagePath]['fbShares'] = fbShare['shares']
+            result[pagePath]['fbShares'] = fbShare['shares']
 
     rows = service.data().ga().get(
         ids='ga:' + BEDROCK_GA_PROFILE,

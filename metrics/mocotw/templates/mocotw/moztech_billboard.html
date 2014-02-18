@@ -118,7 +118,7 @@
     <td class="numbers">{{ post.uniqueUsers }}</td>
     <td class="numbers">{{ post.pageviews }}</td>
     <td class="date">{{ post.date.strftime('%Y-%m-%d') }}</td>
-    <td class="numbers">{{ "%.3f"|format((post.fbShares*20+post.comments*10+post.pageviews)/(1+(now - post.date).days)**2) }}</td>
+    <td class="numbers">{{ "%.3f"|format((post.fbShares*20+post.comments*10+post.pageviews)/(1 if (now - post.date).days < 1 else (now - post.date).days)**2) }}</td>
   </tr>
   {% endfor %}
   </tbody>
