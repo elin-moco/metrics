@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% block page_title %}電子報瀏覽統計{% endblock %}
+
+{% block page_css %}
+<style>
+  img {
+    vertical-align: middle;
+  }
+  td {
+    height: 30px;
+    overflow: hidden;
+  }
+  #newsletter-views thead {
+    position: fixed;
+    top: 0;
+  }
+  thead {
+    background: #D7D3C8;
+    height: 22px;
+  }
+  #newsletter-views {
+    margin-top: 20px;
+  }
+  th.header {
+    cursor: pointer;
+  }
+  th.headerSortUp:after {
+    content: "▼";
+    display: inline-block;
+    font-size: 9px;
+  }
+  th.headerSortDown:after {
+    content: "▲";
+    display: inline-block;
+    font-size: 9px;
+  }
+  th.title {
+    width: 120px;
+  }
+  th.url {
+    width: 480px;
+  }
+  th.numbers {
+    width: 100px;
+  }
+  th.time {
+    width: 120px;
+  }
+  td.url {
+    width: 480px;
+    text-indent: 6px;
+  }
+  td.title {
+    width: 120px;
+    text-indent: 6px;
+  }
+  td.title a img {
+    width: 30px;
+    height: 30px;
+    margin-right: 6px;
+  }
+  td.numbers {
+    text-align: right;
+    width: 100px;
+  }
+  td.time {
+    text-align: right;
+    width: 120px;
+  }
+  tbody tr:nth-child(even) td:nth-child(odd), tbody tr:nth-child(odd) td:nth-child(even) {
+    background: #F6F4EC;
+  }
+  tbody tr:hover td {
+    background: #CAE1F4 !important;
+  }
+  a, a:link {
+    color: #0095DD;
+  }
+  a:hover {
+    color: #00539F;
+  }
+  .referTable {
+    display: none;
+    position: absolute;
+    background: white;
+{#    border: 1px solid gray;#}
+    -webkit-box-shadow: 2px 2px 10px 0px rgba(0, 0, 0, 0.5);
+    -moz-box-shadow:    2px 2px 10px 0px rgba(0, 0, 0, 0.5);
+    box-shadow:         2px 2px 10px 0px rgba(0, 0, 0, 0.5);
+  }
+</style>
+{% endblock %}
+
+{% block page_js %}
+<script type="text/javascript">
+"use strict";
+
+(function() {
+  $('#newsletter-views').tablesorter({sortList: [[0, 1]]});
+  $('.referTable > table').tablesorter({sortList: [[1, 1]]});
+  $('#newsletter-views > tbody > tr').click(function() {
+    var $this = $(this)
+    var issue = $this.children().first().text().trim();
+    var $table = $('#'+issue);
+    if ($table.is(':visible')) {
+      $table.hide();
+    }
+    else {
+      $('.referTable').hide();
+      $table.show();
+      $table.position({
+        my: 'left top',
+        at: 'left bottom',
+        of: $this
+      });
+    }
+  });
+})();
+</script>
+{% endblock %}
+
+{% block content %}
+<table id="newsletter-views">
+  <thead>
+  <tr>
+    <th class="title">期號</th>
+    <th class="numbers">寄送數量</th>
+    <th class="numbers">開信人數</th>
+    <th class="numbers">回覆人數</th>
+    <th class="numbers">網頁版人次</th>
+    <th class="numbers">網頁版瀏覽</th>
+    <th class="time">網頁版平均停留</th>
+    <th class="numbers">導流總人次</th>
+    <th class="numbers">導流總瀏覽</th>
+    <th class="time">導流平均停留</th>
+    <th class="numbers">開信率</th>
+    <th class="numbers">網站導流率</th>
+    <th class="numbers">網頁版使用率</th>
+  </tr>
+  </thead>
+  <tbody>
+  {% for path,issue in issues.items() %}
+  <tr>
+    <td class="title">
+      <a href="http://mozilla.com.tw{{ path }}" target="_blank">{{ path[12:-1] }}</a>
+    </td>
+    <td class="numbers">{{ "%d"|format(issue.emailSent) }}</td>
+    <td class="numbers">{{ "%d"|format(issue.emailViews) }}</td>
+    <td class="numbers">{{ "%d"|format(issue.emailReply) }}</td>
+    <td class="numbers">{{ "%d"|format(issue.uniqueUsers) }}</td>
+    <td class="numbers">{{ "%d"|format(issue.pageViews) }}</td>
+    <td class="time">{{ "%02d:%02d"|format(issue.avgTimeOnSite/60, issue.avgTimeOnSite % 60) }}</td>
+    <td class="numbers">{{ "%d"|format(issue.referUniqueUsers) }}</td>
+    <td class="numbers">{{ "%d"|format(issue.referPageViews) }}</td>
+    <td class="time">{{ "%02d:%02d"|format(issue.referAvgTimeOnSite/60, issue.avgTimeOnSite % 60) }}</td>
+    <td class="numbers">{{ "%.2f%%"|format(issue.emailViews/issue.emailSent*100) }}</td>
+    <td class="numbers">{{ "%.2f%%"|format(issue.referPageViews/issue.emailViews*100) }}</td>
+    <td class="numbers">{{ "%.2f%%"|format(issue.pageViews/(issue.pageViews+issue.emailSent)*100) }}</td>
+  </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+{% for path,issue in issues.items() %}
+  <div id="{{ path[12:-1] }}" class="referTable">
+    <table>
+      <thead>
+        <tr>
+          <th class="url">網址</th>
+          <th class="numbers">瀏覽人次</th>
+          <th class="numbers">瀏覽量</th>
+          <th class="time">平均停留時間</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for idx, refer in issue.refers.items() %}
+        <tr>
+          <td class="url"><a href="//{{ refer.page }}">{{ refer.page }}</a></td>
+          <td class="numbers">{{ refer.uniqueUsers }}</td>
+          <td class="numbers">{{ refer.pageViews }}</td>
+          <td class="time">{{ "%02d:%02d"|format(refer.avgTimeOnSite/60, refer.avgTimeOnSite % 60) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endfor %}
+
+{% endblock %}

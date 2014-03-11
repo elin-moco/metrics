@@ -60,6 +60,19 @@ def mozblog_billboard(request):
     return render(request, 'mocotw/mozblog_billboard.html', data)
 
 
+def newsletter_views(request):
+    df_posts = pd.read_hdf('newsletter.h5', 'main')
+    df_refers = pd.read_hdf('newsletter.h5', 'refers')
+    dic = df_posts.transpose().to_dict()
+    issues = {}
+    for path, issue in dic.items():
+        issue['refers'] = df_refers[df_refers['campaign'] == path[11:]].transpose().to_dict()
+        issues[path] = issue
+
+    data = {'issues': issues}
+    return render(request, 'mocotw/newsletter_views.html', data)
+
+
 def data(request):
     """Main example view."""
     return HttpResponse(render_to_string('dashboard/data.tsv'), mimetype='application/json')
