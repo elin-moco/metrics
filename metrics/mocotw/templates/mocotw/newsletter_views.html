@@ -175,7 +175,7 @@
       <tbody>
         {% for idx, refer in issue.refers.items() %}
         <tr>
-          <td class="url"><a href="//{{ refer.page }}">{{ refer.page }}</a></td>
+          <td class="url"><a href="//{{ refer.page }}" target="_blank">{{ refer.page }}</a></td>
           <td class="numbers">{{ refer.uniqueUsers }}</td>
           <td class="numbers">{{ refer.pageViews }}</td>
           <td class="time">{{ "%02d:%02d"|format(refer.avgTimeOnSite/60, refer.avgTimeOnSite % 60) }}</td>
