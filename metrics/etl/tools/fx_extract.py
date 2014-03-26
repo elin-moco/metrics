@@ -10,6 +10,9 @@ from oauth2client.client import AccessTokenRefreshError
 # import texttable
 import pandas as pd
 import numpy as np
+from datetime import datetime
+
+today = datetime.now().strftime('%Y-%m-%d')
 
 
 def get_results(service, profile_id):
@@ -17,7 +20,7 @@ def get_results(service, profile_id):
     return service.data().ga().get(
         ids='ga:' + profile_id,
         start_date='2013-01-01',
-        end_date='2013-06-10',
+        end_date=today,
         dimensions='ga:date,ga:pagePath,ga:previousPagePath',
         metrics='ga:visitors,ga:pageviews,ga:timeOnPage',
         filters='ga:nextPagePath=~^/firefox/download/.*;ga:hostname=~^(blog\.|tech\.)?mozilla\.com\.tw',

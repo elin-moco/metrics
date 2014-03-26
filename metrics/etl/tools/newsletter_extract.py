@@ -103,6 +103,7 @@ def get_results(service):
                     realPath = '/newsletter/20%s-%s-%s/' % (issue[0:2], issue[2:4], issue[4:6])
                 else:
                     realPath = '/newsletter/20%s-%s/' % (issue[0:2], issue[2:4])
+                print realPath
                 result[realPath]['referUniqueUsers'] = int(row[1])
                 result[realPath]['referPageViews'] = int(row[2])
                 result[realPath]['referAvgTimeOnSite'] = float(row[3])
@@ -138,7 +139,10 @@ def get_results(service):
             matchResult = CAMPAIGN_PATTERN.match(campaign)
             if matchResult:
                 issue = matchResult.group(1)
-                campaign = '/20%s-%s/' % (issue[0:2], issue[2:4])
+                if len(issue) > 4:
+                    campaign = '/20%s-%s-%s/' % (issue[0:2], issue[2:4], issue[4:6])
+                else:
+                    campaign = '/20%s-%s/' % (issue[0:2], issue[2:4])
         except IndexError:
             pass
         pageUrl = hostname+pagePath

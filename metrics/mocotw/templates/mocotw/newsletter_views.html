@@ -97,7 +97,12 @@
 
 (function() {
   $('#newsletter-views').tablesorter({sortList: [[0, 1]]});
-  $('.referTable > table').tablesorter({sortList: [[1, 1]]});
+  $('.referTable > table').each(function() {
+    var $this = $(this);
+    if ($this.find('tbody').is(':empty')) {
+      $this.tablesorter({sortList: [[1, 1]]});
+    }
+  });
   $('#newsletter-views > tbody > tr').click(function() {
     var $this = $(this)
     var issue = $this.children().first().text().trim();
