@@ -50,12 +50,14 @@ def fx_download_stack_data(request):
 
 def moztech_billboard(request):
     df_posts = pd.read_hdf('moztech.h5', 'posts')
+    df_posts['fbSharesRate'] = df_posts['fbShares'].astype(float)/df_posts['pageviews']
     data = {'posts': df_posts.transpose().to_dict(), 'now': datetime.now()}
     return render(request, 'mocotw/moztech_billboard.html', data)
 
 
 def mozblog_billboard(request):
     df_posts = pd.read_hdf('mozblog.h5', 'posts')
+    df_posts['fbSharesRate'] = df_posts['fbShares'].astype(float)/df_posts['pageviews']
     data = {'posts': df_posts.transpose().to_dict(), 'now': datetime.now()}
     return render(request, 'mocotw/mozblog_billboard.html', data)
 

@@ -96,6 +96,7 @@
     <th class="title">標題</th>
     <th class="author">作者</th>
     <th class="numbers">按讚數</th>
+    <th class="numbers">按讚率</th>
     <th class="numbers">留言數</th>
     <th class="numbers">瀏覽人數</th>
     <th class="numbers">瀏覽量</th>
@@ -114,6 +115,7 @@
       <a href="mailto:{{ post.authorEmail.decode('utf8') }}">{{ post.authorName.decode('utf8') }}</a>
     </td>
     <td class="numbers">{{ post.fbShares }}</td>
+    <td class="numbers">{{ '%.2f%%'|format(post.fbSharesRate * 100) }}</td>
     <td class="numbers">{{ post.comments }}</td>
     <td class="numbers">{{ post.uniqueUsers }}</td>
     <td class="numbers">{{ post.pageviews }}</td>

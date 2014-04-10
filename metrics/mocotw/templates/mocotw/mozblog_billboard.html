@@ -89,6 +89,7 @@
   <tr>
     <th class="title">標題</th>
     <th class="numbers">按讚數</th>
+    <th class="numbers">按讚率</th>
     <th class="numbers">留言數</th>
     <th class="numbers">瀏覽人數</th>
     <th class="numbers">瀏覽量</th>
@@ -104,6 +105,7 @@
         <img src="{{ post.thumbnail.decode('utf8') }}"/>{{ post.title.decode('utf8')|safe }}</a>
     </td>
     <td class="numbers">{{ post.fbShares }}</td>
+    <td class="numbers">{{ '%.2f%%'|format(post.fbSharesRate * 100) }}</td>
     <td class="numbers">{{ post.comments }}</td>
     <td class="numbers">{{ post.uniqueUsers }}</td>
     <td class="numbers">{{ post.pageviews }}</td>
