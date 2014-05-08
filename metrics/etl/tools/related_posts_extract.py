@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import sys
 import os.path
+import time
 # import the Auth Helper class
 import ga_auth
 from collections import defaultdict
@@ -15,6 +16,8 @@ import re
 import urllib2
 import json
 from datetime import datetime
+import math
+import redis
 
 MOZBLOG_URL = 'http://blog.mozilla.com.tw'
 
@@ -59,6 +62,7 @@ def save_results(results):
         
         ###### results['rows'] -> [[prePagePath, pagePath, vistors], []]
         ###### dataList [[prePagePath, pagePath, visitor]]
+        ###### merge the GA API
         for item in results['rows']:
             mergePage = []
             previousPage = re.match(r"^(/posts/([0-9]+))(.*)", item[0])
@@ -80,7 +84,8 @@ def save_results(results):
                 print e
 # dataList sample [pre, ref, visitors] => [u'994', u'994', 24]
         
-        #print dataList
+        ##print dataList
+        print len(dataList)
         ###### below is the time and category API
         result = defaultdict(list)
         #postTime = {}
@@ -89,10 +94,14 @@ def save_results(results):
         limit = 5
         total = 1000
         
-        ####### Cache
-        if(os.path.isfile('json_data.txt')):  
-            with open('json_data.txt') as f:
-                result = json.loads(f.read())
+        ####### Cache the Category API, DELTE the file per day
+        if(os.path.isfile('json_data.txt')):
+            fileTime = datetime.strptime(time.ctime(os.path.getmtime('json_data.txt')), '%a %b %d %H:%M:%S %Y')
+            if((datetime.now() - fileTime).seconds > 86400): 
+                os.remove('json_data.txt')
+            else:  
+              with open('json_data.txt') as f:
+                  result = json.loads(f.read())
         else:    
             ###### load the API
             while((page - 1) * limit) <= total:
@@ -108,10 +117,22 @@ def save_results(results):
                         result[post['id']].append(category['title'])
                     #postTime[post['id']] = post['date']
                 page += 1
-        #print result         
+        print result
+        print 'result'         
         with open('json_data.txt', 'w') as outfile:
             json.dump(result, outfile)
-            
+        
+        #### Creat the category dictionary
+        catToPostIdDict = defaultdict(list)
+        catList = ['Firefox', 'Firefox for Android', 'Firefox OS', 'Firefox 教學影片', 'Firefox 祕技', 'Firefox 精選附加元件', 'Firefox 迷思', 'HTML5', 'Mozilla', 'Thunderbird', '新聞訊息', '未分類', '活動', '社群主打星']
+        for cat in catList:
+            for postId, postCatList in result.items():
+                if(str(cat).decode('utf-8') in postCatList):
+                    catToPostIdDict[cat].append(postId)
+        print "分類:"
+        print catToPostIdDict   
+        
+         
         # add the category +, -, time 
         ### dataList => [[pre, page, visitors]]
         ### item => [pre, page, visitors]
@@ -119,16 +140,20 @@ def save_results(results):
             #### key => id
         for preId in result:
             for nextId in result:
+                # filter the preID == nextId
                 if preId == nextId:
+                    #print 'hit'
                     continue
                 outList = []
                 pos = 0
                 neg = 0
                 
-                ### if the post is itself pos +1
+                ### if the post is itself pos +1, 
                 for categoryList in result[preId]:
                     if categoryList in result[nextId]:
                         pos += 1
+                    # due to the timestamp also in the list so -2
+                    # however if their categories are equal it will be -2
                     neg = len(set(result[nextId]) ^ set(result[preId])) - 2 
                 outList.append(preId)
                 outList.append(nextId)
@@ -137,60 +162,95 @@ def save_results(results):
                 outList.append(pos)
                 outList.append(neg)    
                 outcome.append(outList)                       
-                    #else:
-                        #for c in result[k]:
-                        #    if c in result[kk]:
-                        #        pos += 1
-                        #neg = len(set(result[k]) ^ set(result[kk])) - 2 
-                        #outList.append(k)
-                        #outList.append(kk)
-                        #outList.append(0)
-                        #outList.append(result[kk][0])
-                        #outList.append(pos)
-                        #outList.append(neg)
-                        #outcome.append(outList)        
-        
+        ## To check the outcome correctly(debug used)
         with open('./check_all.json', 'w') as ff:
-            json.dump(outcome, ff)
-        #print outcome
-        #print dataList
-        #print len(outcome) 
-            #    if item[0] == key:                    
-            #        item.append(timeStamp)
-            #        for c in result[item[0]]:
-            #            if c in result[item[1]]:
-            #                pos += 1
-            #        item.append(pos)
-            #if item[0] in result:    
-            #    item.append(len(set(result[item[0]]) ^ set(result[item[1]])))
-      
-            
-            #    print "time!"
-            #    item.append(postTime[item[1]])
-            
-            #pos = 0 
-        #print dataList 
+            for ii in outcome:
+              for xx in ii:
+                  ff.write(str(xx))
+              ff.write('=======')
+            #json.dump(outcome, ff)
+        print 'outcome'
+        #print len(outcome)    
     else:
         print 'No results found'
     
     ######## transfer the dataList to Data.frame
     dfOutcome = pd.DataFrame(outcome, dtype='float32', columns=('pre', 'next', 'time', 'pos', 'neg'))
     dfDataList = pd.DataFrame(dataList, columns=('pre', 'next', 'visitors'))
-     
-    df = pd.merge(dfOutcome, dfDataList, how='outer')#, on=('pre', 'next')) 
-    df = df.fillna(0)
-    print df[1:30]
-    df = df.set_index(['pre', 'next'])
-    df['time'] = df['time'] / float(10000)
-    df['pos'] = df['pos']
-    df['visitors'] = df['visitors']
-    df['score'] = df['visitors']/float(10) + df['pos'] - df['neg']
-    #df_final = df.sort(columns='time', ascending=True)
-    #print dfOutcome.head()
-    #print dfDataList.head()
-    print df[20000:20050] 
-    #print df_final[1:10]
-    df.to_hdf('relate_post.h5', 'raw_data')
+    dfOutcome = pd.DataFrame({
+         'pre': pd.Series(dfOutcome['pre'], dtype='int'),
+         'next': pd.Series(dfOutcome['next'], dtype='int'),
+         'time': pd.Series(dfOutcome['time'], dtype='float32'),
+         'pos': pd.Series(dfOutcome['pos'], dtype='int'),
+         'neg': pd.Series(dfOutcome['neg'], dtype='int'),
+    })
+    dfDataList = pd.DataFrame({
+         'pre': pd.Series(dfDataList['pre'], dtype='int'),
+         'next': pd.Series(dfDataList['next'], dtype='int'),
+         'visitors': pd.Series(dfDataList['visitors'], dtype='float32'),
+    })
+    dfOutcome = dfOutcome.set_index(['pre', 'next'])
+    dfDataList = dfDataList.set_index(['pre', 'next'])
+    ##print dfOutcome[1:50]
+    ##print dfDataList[1:50]
+    dfOutcome['visitors'] = dfDataList['visitors']
+
+    dfOutcome = dfOutcome.fillna(0)
+    ##print dfOutcome[1:50]
+    ##print len(dfOutcome)
+    dfOutcome = dfOutcome.reset_index()
+    dfOutcome = dfOutcome[dfOutcome['pre'] != dfOutcome['next']]
+    dfOutcome = dfOutcome.set_index(['pre', 'next'])
+    
+    dfOutcome['time'] = dfOutcome['time'] / float(10000)
+    dfOutcome['score'] = dfOutcome['visitors'] + dfOutcome['pos'] - 0.5 * dfOutcome['neg']
+    ##### count the score use the Association Rules #####
+    idList = dfOutcome.reset_index()['pre'].unique()
+
+    dfConfidence = pd.Series()
+    for preId in idList:
+        dfOutcome.ix[preId]['subSum'] = dfOutcome.ix[preId]['visitors'].sum()
+    #    dfConfidence = dfConfidence.append(dfOutcome.loc[preId]['visitors'].map(lambda x: x/sumSubVisitors))
+    def myfunc(group):
+       # dfOutcome['subSum'] = group['visitors'].sum()
+        group['next']
+        print group.head()
+       #for preId in idList:
+             
+            #group['confidence'] = group['next']['visitors'] / sumSubVisitors
+        return group
+    dfOutcome = dfOutcome.reset_index() 
+    dfOutcome.groupby('pre').apply(myfunc)    
+    dfOutcome = dfOutcome.set_index(['pre', 'next'])
+     #dfOutcome['confidence'] = dfConfidence    
+    #dfOutcome.loc[preId]['confidence'] = dfOutcome.loc[preId].loc[nexId]['visitors'] / dfOutcome.ix[preId]['visitors'].sum()
+
+    df_sort = dfOutcome.sort(['score'], ascending=[0])
+    print df_sort.head()
+    ##print len(df_sort)
+    total_visitors = df_sort['visitors'].sum()
+    df_sort['support'] = df_sort['visitors'] / total_visitors
+    dfOutcome.to_hdf('relate_post.h5', 'outcome')
+    df_sort.to_hdf('relate_post.h5', 'df_sort')
+    print df_sort.head()
+    #### Redis ####
+    try:
+        r_server = redis.Redis("localhost")
+    except RuntimeError as e:
+        print e
+    ##  preId - {next : score} trnsform to redis 
+    for preIds in idList:
+        preTmp = df_sort.ix[preIds]
+        addResultDict = preTmp[0:-1]['score'].to_dict()
+        #print addResultDict  
+        addResultDict = dict((str(k), v) for k, v in addResultDict.items())
+        r_server.zadd('mozblog-related-post-' + str(preIds), **addResultDict)
+    ##print r_server.zrange('pre-post-1409', 1, 3000)    
+    for catKey, catItemList in catToPostIdDict.items():
+        sortCatList = sorted(catItemList, reverse=False)
+        sortCatDict = dict((str(v), k) for k, v in enumerate(sortCatList))
+        r_server.zadd('mozblog-category-' + str(catKey), **sortCatDict) 
+    print r_server.zrange('mozblog-category-Firefox', 1, 20)
 
 def main(argv = []):
     # Step 1. Get an analytics service object.
