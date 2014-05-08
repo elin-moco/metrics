@@ -13,4 +13,4 @@ texttable==0.8.1
 oauthlib==0.1.3
 google-api-python-client==1.1
 gunicorn==17.5
-
+redis==2.9.1

@@ -16,13 +16,21 @@ from oauth2client.client import AccessTokenRefreshError
 # import texttable
 import pandas as pd
 import numpy as np
-from metrics.settings import MOCO_API_SECRET, FFCLUB_API_SECRET, BEDROCK_GA_PROFILE, FFCLUB_GA_PROFILE
+from metrics.settings import MOCO_API_SECRET, FFCLUB_API_SECRET, BEDROCK_GA_PROFILE, FFCLUB_GA_PROFILE, MOZTECH_AUTHORS_FILE
 
 today = datetime.now().strftime('%Y-%m-%d')
 POST_PATTERN = re.compile('^(/posts/[0-9]+)(.*)')
 MOZTECH_URL = 'http://tech.mozilla.com.tw'
 
 def get_results(service):
+
+    authors = pd.DataFrame.from_csv(MOZTECH_AUTHORS_FILE, header=-1, parse_dates=False)
+    authors = authors.reset_index()
+    authors.columns = ['id', 'email', 'name']
+    authors = authors.set_index('id')
+    authors['name'] = authors['name'].map(lambda x: x.strip())
+    authors['email'] = authors['email'].map(lambda x: x.strip())
+
     result = {}
     canonical = []
     page = 1
@@ -34,12 +42,13 @@ def get_results(service):
         total = moztechData['count_total']
         for post in moztechData['posts']:
             canonical += (post['url'], )
+            author_id = post['author']['id']
             result['/posts/%d' % post['id']] = {
                 'id': post['id'],
                 'title': post['title'],
                 'thumbnail': post['thumbnail'] if 'thumbnail' in post else '',
-                'authorEmail': post['author']['slug'].replace('mozilla-com', '@mozilla.com'),
-                'authorName': post['author']['nickname'],
+                'authorEmail': authors.loc[author_id]['email'],
+                'authorName': authors.loc[author_id]['name'],
                 'comments': len(post['comments']),
                 'date': post['date'].split(' ')[0],
                 'fbShares': 0,
@@ -55,6 +64,8 @@ def get_results(service):
         pagePath = url[len(MOZTECH_URL):url.rfind('/')]
         if 'shares' in fbShare:
             result[pagePath]['fbShares'] = fbShare['shares']
+        if 'comments' in fbShare:
+            result[pagePath]['comments'] += fbShare['comments']
 
     rows = service.data().ga().get(
         ids='ga:' + BEDROCK_GA_PROFILE,
@@ -83,18 +94,22 @@ def get_results(service):
                         result[realPath]['pageviews'] = int(row[2])
         except IndexError:
             pass
-    return result
+    return {'authors': authors, 'posts': result}
 
 
 def save_results(results):
     # Print data nicely for the user.
-    if results:
-        print '%d rows fetched' % len(results)
+    if 'authors' in results:
+        results['authors'].to_hdf('moztech.h5', 'authors')
+
+    if 'posts' in results:
+        posts = results['posts']
+        print '%d rows fetched' % len(posts)
         newRows = {}
-        for path, row in results.items():
+        for path, row in posts.items():
             newRow = {}
             for prop, col in row.items():
-                newRow[prop] = col.encode('utf8') if isinstance(col, (unicode, str)) else col
+                newRow[prop] = col.encode('utf8') if isinstance(col, unicode) else col
             print newRow
             newRows[path] = newRow
         df = pd.DataFrame(newRows).transpose()

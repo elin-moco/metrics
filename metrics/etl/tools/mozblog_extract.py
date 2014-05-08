@@ -53,6 +53,8 @@ def get_results(service):
         pagePath = url[len(MOZBLOG_URL):url.rfind('/')]
         if 'shares' in fbShare:
             result[pagePath]['fbShares'] = fbShare['shares']
+        if 'comments' in fbShare:
+            result[pagePath]['comments'] += fbShare['comments']
 
     rows = service.data().ga().get(
         ids='ga:' + BEDROCK_GA_PROFILE,
