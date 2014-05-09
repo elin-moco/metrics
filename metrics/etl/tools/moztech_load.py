@@ -31,6 +31,14 @@ def main():
 
     try:
         redis_client = redis.Redis("localhost")
+
+        redis_client.delete('moztech-author-emails')
+        redis_client.delete('moztech-author-posts')
+        redis_client.delete('moztech-author-post-visits')
+        redis_client.delete('moztech-author-post-likes')
+        redis_client.delete('moztech-author-post-comments')
+        redis_client.delete('moztech-nth-post-author')
+
         redis_client.sadd('moztech-author-emails', *(authorEmails.tolist()))
         redis_client.zadd('moztech-author-posts', **authorPosts)
         redis_client.zadd('moztech-author-post-visits', **authorPostVisits)
