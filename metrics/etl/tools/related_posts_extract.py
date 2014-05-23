@@ -195,7 +195,6 @@ def save_results(results):
     ##print dfDataList[1:50]
     dfOutcome['visitors'] = dfDataList['visitors']
 
-    dfOutcome = dfOutcome.fillna(0)
     ##print dfOutcome[1:50]
     ##print len(dfOutcome)
     dfOutcome = dfOutcome.reset_index()
@@ -212,45 +211,54 @@ def save_results(results):
         dfOutcome.ix[preId]['subSum'] = dfOutcome.ix[preId]['visitors'].sum()
     #    dfConfidence = dfConfidence.append(dfOutcome.loc[preId]['visitors'].map(lambda x: x/sumSubVisitors))
     def myfunc(group):
-       # dfOutcome['subSum'] = group['visitors'].sum()
-        group['next']
-        print group.head()
-       #for preId in idList:
-             
-            #group['confidence'] = group['next']['visitors'] / sumSubVisitors
+        sumSubVisitors = group['visitors'].sum()
+        group['confidence'] = group['visitors'].map(lambda x: x/sumSubVisitors)         
         return group
-    dfOutcome = dfOutcome.reset_index() 
-    dfOutcome.groupby('pre').apply(myfunc)    
-    dfOutcome = dfOutcome.set_index(['pre', 'next'])
-     #dfOutcome['confidence'] = dfConfidence    
-    #dfOutcome.loc[preId]['confidence'] = dfOutcome.loc[preId].loc[nexId]['visitors'] / dfOutcome.ix[preId]['visitors'].sum()
 
-    df_sort = dfOutcome.sort(['score'], ascending=[0])
+    dfOutcome = dfOutcome.reset_index() 
+    dfOutcome = dfOutcome.groupby('pre').apply(myfunc)    
+    dfOutcome = dfOutcome.set_index(['pre', 'next'])
+    dfOutcome = dfOutcome.fillna(0)
+    df_sort = dfOutcome.sort(['confidence'], ascending=[0])
+    
+    #### save the unique post id
+         
+  
     print df_sort.head()
     ##print len(df_sort)
     total_visitors = df_sort['visitors'].sum()
     df_sort['support'] = df_sort['visitors'] / total_visitors
+    # sort the support 
+    df_sort_by_support = df_sort[df_sort['support'] > df_sort[df_sort['support']>0]['support'].mean()]
     dfOutcome.to_hdf('relate_post.h5', 'outcome')
     df_sort.to_hdf('relate_post.h5', 'df_sort')
+    df_sort_by_support.to_hdf('relate_post.h5', 'df_sort_by_support')
     print df_sort.head()
     #### Redis ####
     try:
         r_server = redis.Redis("localhost")
     except RuntimeError as e:
         print e
+    
+    print "here"
+    print idList[0]
+    r_server.sadd('post-id', *idList)
     ##  preId - {next : score} trnsform to redis 
-    for preIds in idList:
-        preTmp = df_sort.ix[preIds]
-        addResultDict = preTmp[0:-1]['score'].to_dict()
-        #print addResultDict  
-        addResultDict = dict((str(k), v) for k, v in addResultDict.items())
-        r_server.zadd('mozblog-related-post-' + str(preIds), **addResultDict)
-    ##print r_server.zrange('pre-post-1409', 1, 3000)    
+    sortedIdList = df_sort_by_support.reset_index()['pre'].unique().tolist()
+    # add the confidence to sorted set
+    for preIds in sortedIdList:
+        preTmp = df_sort_by_support.loc[preIds]
+        if preTmp is not None:
+            addResultDict = preTmp['confidence'].to_dict()
+            addResultDict = dict((str(k), v) for k, v in addResultDict.items())
+            r_server.delete('mozblog-related-post-' + str(preIds))
+            r_server.zadd('mozblog-related-post-' + str(preIds), **addResultDict)
+    
+    # add the category to the redis
     for catKey, catItemList in catToPostIdDict.items():
-        sortCatList = sorted(catItemList, reverse=False)
-        sortCatDict = dict((str(v), k) for k, v in enumerate(sortCatList))
-        r_server.zadd('mozblog-category-' + str(catKey), **sortCatDict) 
-    print r_server.zrange('mozblog-category-Firefox', 1, 20)
+        r_server.delete('mozblog-category-' + str(catKey))
+        r_server.sadd('mozblog-category-' + str(catKey), *catItemList)
+    #print r_server.smembers('mozblog-category-Firefox')#('mozblog-category-Firefox', 1, 20)
 
 def main(argv = []):
     # Step 1. Get an analytics service object.
