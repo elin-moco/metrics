@@ -22,6 +22,7 @@ today = datetime.now().strftime('%Y-%m-%d')
 POST_PATTERN = re.compile('^(/posts/[0-9]+)(.*)')
 MOZTECH_URL = 'http://tech.mozilla.com.tw'
 
+
 def get_results(service):
 
     authors = pd.DataFrame.from_csv(MOZTECH_AUTHORS_FILE, header=-1, parse_dates=False)
@@ -64,8 +65,8 @@ def get_results(service):
         pagePath = url[len(MOZTECH_URL):url.rfind('/')]
         if 'shares' in fbShare:
             result[pagePath]['fbShares'] = fbShare['shares']
-        if 'comments' in fbShare:
-            result[pagePath]['comments'] += fbShare['comments']
+        # if 'comments' in fbShare:
+        #     result[pagePath]['comments'] += fbShare['comments']
 
     rows = service.data().ga().get(
         ids='ga:' + BEDROCK_GA_PROFILE,
