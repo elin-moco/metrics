@@ -93,16 +93,17 @@ def save_results(results):
         page = 1
         limit = 5
         total = 1000
-        
+        catList = set() 
         ####### Cache the Category API, DELTE the file per day
-        if(os.path.isfile('json_data.txt')):
+        # if((datetime.now() - fileTime).seconds > 86400):
+        #     os.remove('json_data.txt')
+        if os.path.isfile('json_data.txt') and os.path.isfile('cate_data.txt'):
             fileTime = datetime.strptime(time.ctime(os.path.getmtime('json_data.txt')), '%a %b %d %H:%M:%S %Y')
-            if((datetime.now() - fileTime).seconds > 86400): 
-                os.remove('json_data.txt')
-            else:  
-              with open('json_data.txt') as f:
-                  result = json.loads(f.read())
-        else:    
+            with open('json_data.txt') as f:
+                result = json.loads(f.read())
+            with open('cate_data.txt') as f:
+                catList = json.loads(f.read())
+        else:
             ###### load the API
             while((page - 1) * limit) <= total:
                 relData = json.loads(urllib2.urlopen('%s/api/get_recent_posts/?count=%d&page=%d' % (MOZBLOG_URL, limit, page)).read())                  
@@ -115,19 +116,23 @@ def save_results(results):
                     result[post['id']].append(timeStamp)
                     for category in post['categories']:
                         result[post['id']].append(category['title'])
+                        catList.add(category['title'])
                     #postTime[post['id']] = post['date']
                 page += 1
+                print catList
+            with open('json_data.txt', 'w') as outfile:
+                json.dump(result, outfile)
+            with open('cate_data.txt', 'w') as outfile:
+                json.dump(list(catList), outfile)
         print result
         print 'result'         
-        with open('json_data.txt', 'w') as outfile:
-            json.dump(result, outfile)
-        
+
         #### Creat the category dictionary
         catToPostIdDict = defaultdict(list)
-        catList = ['Firefox', 'Firefox for Android', 'Firefox OS', 'Firefox 教學影片', 'Firefox 祕技', 'Firefox 精選附加元件', 'Firefox 迷思', 'HTML5', 'Mozilla', 'Thunderbird', '新聞訊息', '未分類', '活動', '社群主打星']
+        #catList = ['Firefox', 'Firefox for Android', 'Firefox OS', 'Firefox 教學影片', 'Firefox 祕技', 'Firefox 精選附加元件', 'Firefox 迷思', 'HTML5', 'Mozilla', 'Thunderbird', '新聞訊息', '未分類', '活動', '社群主打星']
         for cat in catList:
             for postId, postCatList in result.items():
-                if(str(cat).decode('utf-8') in postCatList):
+                if cat in postCatList:
                     catToPostIdDict[cat].append(postId)
         print "分類:"
         print catToPostIdDict   
@@ -242,7 +247,7 @@ def save_results(results):
     
     print "here"
     print idList[0]
-    r_server.sadd('post-id', *idList)
+    r_server.sadd('mozblog-all-posts', *idList)
     ##  preId - {next : score} trnsform to redis 
     sortedIdList = df_sort_by_support.reset_index()['pre'].unique().tolist()
     # add the confidence to sorted set
@@ -256,8 +261,8 @@ def save_results(results):
     
     # add the category to the redis
     for catKey, catItemList in catToPostIdDict.items():
-        r_server.delete('mozblog-category-' + str(catKey))
-        r_server.sadd('mozblog-category-' + str(catKey), *catItemList)
+        r_server.delete('mozblog-category-%s' % catKey)
+        r_server.sadd('mozblog-category-%s' % catKey, *catItemList)
     #print r_server.smembers('mozblog-category-Firefox')#('mozblog-category-Firefox', 1, 20)
 
 def main(argv = []):
