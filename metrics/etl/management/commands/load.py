@@ -24,4 +24,8 @@ class Command(BaseCommand):
         if args[0] == 'newsletter':
             newsletter_extract.main()
         if args[0] == 'related_posts':
-            related_posts_extract.main()
+            if len(args) > 1:
+                related_posts_extract.main(args[1])
+            else:
+                related_posts_extract.main('blog')
+                related_posts_extract.main('tech')
