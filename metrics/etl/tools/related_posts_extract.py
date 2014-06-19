@@ -177,14 +177,14 @@ def write_redis(domain, support_filtered_df, category_posts, all_posts):
             confidence_dict = dict((str(k), v) for k, v in confidence_dict.items())
             print group_id
             print confidence_dict
-            redis_client.delete('moz%s-related-post-%s' % (domain, group_id))
-            redis_client.zadd('moz%s-related-post-%s' % (domain, group_id), **confidence_dict)
+            redis_client.delete('moz%s-related-posts-%s' % (domain, group_id))
+            redis_client.zadd('moz%s-related-posts-%s' % (domain, group_id), **confidence_dict)
             return group
         support_filtered_df.reset_index().groupby('pre').apply(add_to_redis)
 
         for category, posts in category_posts.items():
-            redis_client.delete('moz%s-category-%s' % (domain, category))
-            redis_client.sadd('moz%s-category-%s' % (domain, category), *posts)
+            redis_client.delete('moz%s-category-posts-%s' % (domain, category))
+            redis_client.sadd('moz%s-category-posts-%s' % (domain, category), *posts)
 
         redis_client.delete('moz%s-all-posts' % domain)
         redis_client.sadd('moz%s-all-posts' % domain, *all_posts)
