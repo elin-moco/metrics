@@ -20,7 +20,15 @@ def main():
     for n in authorNthPostBase:
         data = json.loads(urllib2.urlopen(nthPostApi % n).read())
         if data['posts']:
-            authorNthPost[n] = data['posts'][0]['author']['slug'].replace('mozilla-com', '@mozilla.com')
+            authorNthPost[n] = authors.ix[data['posts'][0]['author']['id']]['email']
+
+    def stringify_dict_keys(item):
+        return str(item[0]), item[1]
+
+    authorPageviews = authors['pageviews'].to_dict()
+    authorPageviews = dict(map(stringify_dict_keys, authorPageviews.iteritems()))
+    authorLikes = authors['likes'].to_dict()
+    authorLikes = dict(map(stringify_dict_keys, authorLikes.iteritems()))
 
     print authorEmails
     print authorPosts
@@ -28,6 +36,8 @@ def main():
     print authorPostLikes
     print authorPostComments
     print authorNthPost
+    print authorPageviews
+    print authorLikes
 
     try:
         redis_client = redis.Redis("localhost")
@@ -38,6 +48,8 @@ def main():
         redis_client.delete('moztech-author-post-likes')
         redis_client.delete('moztech-author-post-comments')
         redis_client.delete('moztech-nth-post-author')
+        redis_client.delete('moztech-author-pageviews')
+        redis_client.delete('moztech-author-likes')
 
         redis_client.sadd('moztech-author-emails', *(authorEmails.tolist()))
         redis_client.zadd('moztech-author-posts', **authorPosts)
@@ -45,6 +57,8 @@ def main():
         redis_client.zadd('moztech-author-post-likes', **authorPostLikes)
         redis_client.zadd('moztech-author-post-comments', **authorPostComments)
         redis_client.hmset('moztech-nth-post-author', authorNthPost)
+        redis_client.hmset('moztech-author-pageviews', authorPageviews)
+        redis_client.hmset('moztech-author-likes', authorLikes)
 
     except RuntimeError as e:
         print e

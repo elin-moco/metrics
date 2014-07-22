@@ -28,9 +28,15 @@ def get_results(service):
     authors = pd.DataFrame.from_csv(MOZTECH_AUTHORS_FILE, header=-1, parse_dates=False)
     authors = authors.reset_index()
     authors.columns = ['id', 'email', 'name']
+    initial_scores = np.zeros(authors.index.values.max() + 1)
+    authors = pd.DataFrame({
+        'id': pd.Series(authors['id'], dtype='int'),
+        'name': pd.Series(authors['name'].map(lambda x: x.strip()), dtype='object'),
+        'email': pd.Series(authors['email'].map(lambda x: x.strip()), dtype='object'),
+        'pageviews': pd.Series(initial_scores, dtype='int'),
+        'likes': pd.Series(initial_scores, dtype='int'),
+    })
     authors = authors.set_index('id')
-    authors['name'] = authors['name'].map(lambda x: x.strip())
-    authors['email'] = authors['email'].map(lambda x: x.strip())
 
     result = {}
     canonical = []
@@ -95,14 +101,12 @@ def get_results(service):
                         result[realPath]['pageviews'] = int(row[2])
         except IndexError:
             pass
+
     return {'authors': authors, 'posts': result}
 
 
 def save_results(results):
     # Print data nicely for the user.
-    if 'authors' in results:
-        results['authors'].to_hdf('moztech.h5', 'authors')
-
     if 'posts' in results:
         posts = results['posts']
         print '%d rows fetched' % len(posts)
@@ -132,9 +136,25 @@ def save_results(results):
         # table.add_rows(newRows)
         # print table.draw()
         #print 'Total Visits: %s' % results.get('rows')[0][0]
-
     else:
         print 'No results found'
+
+    if 'authors' in results:
+        authors = results['authors']
+
+        def build_author_scores(author):
+            authorPosts = df[df['authorEmail'] == author['email']]
+            author['pageviews'] = authorPosts['pageviews'].sum()
+            author['likes'] = authorPosts['fbShares'].sum()
+            return author
+        authors = authors.apply(build_author_scores, 1)
+        authors = pd.DataFrame({
+            'name': pd.Series(authors['name']),
+            'email': pd.Series(authors['email']),
+            'pageviews': pd.Series(authors['pageviews'], dtype='int'),
+            'likes': pd.Series(authors['likes'], dtype='int'),
+        })
+        authors.to_hdf('moztech.h5', 'authors')
 
 
 def main():
