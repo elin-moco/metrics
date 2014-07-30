@@ -17,6 +17,7 @@ from oauth2client.client import AccessTokenRefreshError
 import pandas as pd
 import numpy as np
 from metrics.settings import MOCO_API_SECRET, FFCLUB_API_SECRET, BEDROCK_GA_PROFILE, FFCLUB_GA_PROFILE, MOZTECH_AUTHORS_FILE
+import math
 
 today = datetime.now().strftime('%Y-%m-%d')
 POST_PATTERN = re.compile('^(/posts/[0-9]+)(.*)')
@@ -64,8 +65,15 @@ def get_results(service):
             }
         page += 1
 
-    urls = ','.join([x for x in canonical])
-    fbShareData = json.loads(urllib2.urlopen('https://graph.facebook.com/?%s' % urlencode({'ids': urls})).read())
+    chunk_size = 100
+    chunks = int(math.ceil(len(canonical) / chunk_size))
+    fbShareData = dict()
+    for i in range(chunks):
+        url_chunk = canonical[i * chunk_size: (i + 1) * chunk_size]
+        urls = ','.join(url_chunk)
+        fbShareData = dict(fbShareData.items() +
+                           json.loads(urllib2.urlopen('https://graph.facebook.com/?%s' %
+                                                      urlencode({'ids': urls})).read()).items())
 
     for url, fbShare in fbShareData.items():
         pagePath = url[len(MOZTECH_URL):url.rfind('/')]
