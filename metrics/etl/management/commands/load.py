@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from metrics.etl.tools import related_posts_extract, fx_extract, log_extract, pd_transform, main_extract, moztech_extract, mozblog_extract, newsletter_extract, moztech_load
+from metrics.etl.tools import related_posts_extract, fx_extract, log_extract, pd_transform, main_extract, moztech_extract, mozblog_extract, newsletter_extract, moztech_load, browser_survey_extract
 from metrics.settings import LOG_PATH
 
 
@@ -29,3 +29,5 @@ class Command(BaseCommand):
             else:
                 related_posts_extract.main('blog')
                 related_posts_extract.main('tech')
+        if args[0] == 'browser_survey':
+            browser_survey_extract.main()
