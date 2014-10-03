@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-from datetime import datetime
 import pandas as pd
-
-today = datetime.now().strftime('%Y-%m-%d')
 
 
 def get_results():
@@ -86,11 +83,55 @@ def get_results():
                 'fx_support', 'fx_stable', 'fx_sync', 'fx_autocomplete', 'fx_opensource'])
     survey = fx_user_survey.append(non_fx_user_survey)
 
+    # print survey
+
     def drop_all_duplicates(group):
         if len(group.index) > 1:
             group = None
         return group
     survey = survey.groupby('email', sort=False, as_index=False, group_keys=False).apply(drop_all_duplicates)
+
+    raw = pd.DataFrame({
+        'is_dev': pd.Series(survey['is_dev'], dtype='int')
+    })
+
+    raw['online_activities_search'] = pd.Series(survey['online_activities_search'], dtype='int')
+    raw['online_activities_read'] = pd.Series(survey['online_activities_read'], dtype='int')
+    raw['online_activities_social'] = pd.Series(survey['online_activities_social'], dtype='int')
+    raw['online_activities_shop'] = pd.Series(survey['online_activities_shop'], dtype='int')
+    raw['online_activities_entertain'] = pd.Series(survey['online_activities_entertain'], dtype='int')
+    raw['online_activities_debug'] = pd.Series(survey['online_activities_debug'], dtype='int')
+    raw['firefox'] = survey['firefox']
+    raw['chrome'] = survey['chrome']
+    raw['ie'] = survey['ie']
+    raw['safari'] = survey['safari']
+    raw['opera'] = survey['opera']
+    raw['speed'] = survey['speed']
+    raw['security'] = survey['security']
+    raw['privacy'] = survey['privacy']
+    raw['customize'] = survey['customize']
+    raw['interface'] = survey['interface']
+    raw['support'] = survey['support']
+    raw['stable'] = survey['stable']
+    raw['sync'] = survey['sync']
+    raw['autocomplete'] = survey['autocomplete']
+    raw['opensource'] = survey['opensource']
+    raw['fx_speed'] = survey['fx_speed']
+    raw['fx_security'] = survey['fx_security']
+    raw['fx_privacy'] = survey['fx_privacy']
+    raw['fx_fx_customize'] = survey['fx_customize']
+    raw['fx_interface'] = survey['fx_interface']
+    raw['fx_support'] = survey['fx_support']
+    raw['fx_stable'] = survey['fx_stable']
+    raw['fx_sync'] = survey['fx_sync']
+    raw['fx_autocomplete'] = survey['fx_autocomplete']
+    raw['fx_opensource'] = survey['fx_opensource']
+    raw['fx_impression_speed'] = pd.Series(survey['fx_impression_speed'], dtype='int')
+    raw['fx_impression_security'] = pd.Series(survey['fx_impression_security'], dtype='int')
+    raw['fx_impression_privacy'] = pd.Series(survey['fx_impression_privacy'], dtype='int')
+    raw['fx_impression_customize'] = pd.Series(survey['fx_impression_customize'], dtype='int')
+    raw['fx_impression_opensource'] = pd.Series(survey['fx_impression_opensource'], dtype='int')
+
     # print survey
     summary = pd.DataFrame({
         'all': pd.Series(survey.sum(), dtype='float32')
@@ -149,11 +190,12 @@ def get_results():
     for column in summary.columns:
         summary[column] /= summary['valid']
 
-    print summary.dtypes
+    # print summary.dtypes
 
     return {
         'survey': survey,
         'summary': summary,
+        'raw': raw
     }
 
 
@@ -162,6 +204,12 @@ def save_results(results):
         survey = results['survey']
         print '%d rows fetched' % len(survey)
         survey.to_hdf('browser_survey.h5', 'survey')
+        online_act_other = survey[survey['online_activities_other'].str.len() > 0]['online_activities_other']
+        other = survey[survey['other'].str.len() > 0]['other']
+        fx_imp_other = survey[survey['fx_impression_other'].str.len() > 0]['fx_impression_other']
+        online_act_other.to_csv('other.csv')
+        other.to_csv('online_activities_other.csv')
+        fx_imp_other.to_csv('fx_impression_other.csv')
     else:
         print 'No survey results found'
 
@@ -171,6 +219,14 @@ def save_results(results):
         summary.to_hdf('browser_survey.h5', 'summary')
     else:
         print 'No summary results found'
+
+    if 'raw' in results:
+        raw = results['raw']
+        raw.to_csv('10years-survey-raw.csv')
+        raw[raw['online_activities_debug'] == 1].to_csv('10years-survey-debug-raw.csv')
+        raw[raw['online_activities_debug'] == 0].to_csv('10years-survey-nodebug-raw.csv')
+        raw[raw['online_activities_social'] == 1].to_csv('10years-survey-social-raw.csv')
+        raw[raw['online_activities_social'] == 0].to_csv('10years-survey-nosocial-raw.csv')
 
 
 def main():
