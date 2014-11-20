@@ -49,7 +49,7 @@ def get_results(service):
         page += 1
 
     chunk_size = 100
-    chunks = int(math.ceil(len(canonical) / chunk_size))
+    chunks = int(math.ceil(float(len(canonical)) / chunk_size))
     fbShareData = dict()
     for i in range(chunks):
         url_chunk = canonical[i * chunk_size: (i + 1) * chunk_size]
